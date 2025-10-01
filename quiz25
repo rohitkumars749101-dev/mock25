@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>TRIGONOMETRY (Q.501 TO Q.525)</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+  body { font-family: Arial, sans-serif; margin:0; background:#f4f4f4; }
+  .wrapper { display:flex; justify-content:center; align-items:flex-start; min-height:100vh; padding:20px; }
+  .quiz-container { background:#fff; padding:15px; border-radius:8px; box-shadow:0 4px 12px rgba(0,0,0,0.1); width:100%; max-width:700px; }
+  .question-block { display:none; }
+  h2 { font-size:20px; text-align:center; }
+  .options { list-style:none; padding:0; text-align:left; }
+  .options li { margin:8px 0; }
+  img { max-width:100%; display:block; margin:auto; border:1px solid #ddd; border-radius:6px; }
+  button { padding:8px 14px; margin:8px; border:none; background:#3498db; color:#fff; border-radius:4px; cursor:pointer; }
+  button:hover { background:#2980b9; }
+  .nav { margin-top:15px; text-align:center; }
+  .timer { font-weight:bold; color:red; font-size:18px; text-align:center; }
+  .perq-timer { font-weight:bold; color:green; margin-top:10px; }
+  .progress { font-weight:bold; margin:10px 0; text-align:center; }
+  .result-summary { background:#f9f9f9; padding:15px; border-radius:6px; margin-top:20px; }
+</style>
+</head>
+<body>
+
+<div class="wrapper">
+<div class="quiz-container">
+  <h2>TRIGONOMETRY (Q.501 TO Q.525)</h2>
+  <div class="timer">Global Timer: <span id="timer">30:00</span></div>
+  <div id="progress" class="progress"></div>
+
+  <div id="questions"></div>
+
+  <div class="nav">
+    <button onclick="prevQ()">Previous</button>
+    <button onclick="nextQ()">Next</button>
+    <button onclick="endQuiz()">Finish Quiz</button>
+  </div>
+
+  <div id="finalResult" class="result-summary" style="display:none;"></div>
+</div>
+</div>
+
+<script>
+let current=1,total=25,score=0;
+let timeLeft=30*60,timerInterval;
+let perQtime=Array(total).fill(0);
+let userAns=Array(total).fill(null);
+
+let perQTimer=0, perQInterval;
+
+const answers={1:"d",2:"d",3:"d",4:"c",5:"d",6:"b",7:"d",8:"d",9:"b",10:"b",
+11:"b",12:"a",13:"a",14:"d",15:"b",16:"c",17:"d",18:"b",19:"d",20:"d",
+21:"a",22:"b",23:"d",24:"a",25:"a"};
+
+const allQuestions=Array.from({length:25},(_,i)=>({qno:i+1,correct:answers[i+1]}));
+
+function updateProgress(){
+  document.getElementById("progress").textContent=`Question ${current} of ${total}`;
+}
+
+function showQ(n){
+  stopPerQTimer();
+  document.querySelectorAll('.question-block').forEach((q,i)=>{
+    q.style.display=(i===n-1)?'block':'none';
+  });
+  current=n;
+  updateProgress();
+  startPerQTimer();
+}
+
+function saveAns(qno,val){ userAns[qno-1]=val; }
+
+function prevQ(){ if(current>1){showQ(current-1);} }
+function nextQ(){ if(current<total){showQ(current+1);} }
+
+function startTimer(){
+  timerInterval=setInterval(()=>{
+    timeLeft--;
+    document.getElementById("timer").textContent=
+      Math.floor(timeLeft/60)+":"+String(timeLeft%60).padStart(2,'0');
+    if(timeLeft<=0){clearInterval(timerInterval);endQuiz();}
+  },1000);
+}
+
+function startPerQTimer(){
+  perQTimer=perQtime[current-1];
+  updatePerQDisplay();
+  perQInterval=setInterval(()=>{
+    perQTimer++;
+    perQtime[current-1]=perQTimer;
+    updatePerQDisplay();
+  },1000);
+}
+function stopPerQTimer(){
+  clearInterval(perQInterval);
+  if(current>=1 && current<=total){ perQtime[current-1]=perQTimer; }
+}
+function updatePerQDisplay(){
+  document.getElementById("perqt"+current).textContent="Time on this question: "+perQTimer+"s";
+}
+
+function endQuiz(){
+  stopPerQTimer(); clearInterval(timerInterval);
+  document.querySelectorAll('.question-block').forEach(q=>q.style.display='none');
+  document.querySelector('.nav').style.display='none';
+  document.getElementById("progress").style.display='none';
+
+  score=0; let corr=0,inc=0,unans=0;
+  allQuestions.forEach((q,i)=>{
+    if(userAns[i]){
+      if(userAns[i]===q.correct){score+=2;corr++;}
+      else{score-=0.25;inc++;}
+    } else {unans++;}
+  });
+
+  let html=`<h3>Quiz Finished</h3>
+            <p><b>Final Score:</b> ${score}</p>
+            <p style="color:green">Correct: ${corr}</p>
+            <p style="color:red">Incorrect: ${inc}</p>
+            <p style="color:gray">Unanswered: ${unans}</p>
+            <h4>Review:</h4>`;
+  allQuestions.forEach((q,i)=>{
+    html+=`<div style="margin-bottom:20px;">
+             <h4>Q${q.qno}</h4>
+             <img src="q${q.qno}.png"><br>
+             Your Answer: ${userAns[i]||"Not answered"}<br>
+             Correct Answer: ${q.correct}<br>
+             <img src="sol${q.qno}.png">
+             <p><i>Total time on this question: ${perQtime[i]}s</i></p>
+           </div>`;
+  });
+
+  document.getElementById("finalResult").innerHTML=html;
+  document.getElementById("finalResult").style.display="block";
+}
+
+function buildQuestions(){
+  const container=document.getElementById("questions");
+  allQuestions.forEach(q=>{
+    container.innerHTML+=`
+      <div class="question-block" id="q${q.qno}">
+        <h3>Q.${q.qno}</h3>
+        <img src="q${q.qno}.png" alt="Q${q.qno}">
+        <ul class="options">
+          <li><label><input type="radio" name="q${q.qno}" value="a" onchange="saveAns(${q.qno},'a')"> (a)</label></li>
+          <li><label><input type="radio" name="q${q.qno}" value="b" onchange="saveAns(${q.qno},'b')"> (b)</label></li>
+          <li><label><input type="radio" name="q${q.qno}" value="c" onchange="saveAns(${q.qno},'c')"> (c)</label></li>
+          <li><label><input type="radio" name="q${q.qno}" value="d" onchange="saveAns(${q.qno},'d')"> (d)</label></li>
+        </ul>
+        <div id="perqt${q.qno}" class="perq-timer"></div>
+      </div>`;
+  });
+}
+buildQuestions(); showQ(current); startTimer();
+</script>
+
+</body>
+</html>
